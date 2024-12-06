@@ -36,9 +36,12 @@ class FileInfo:
     def download(self, path: str, force_download: bool = False) -> None:
         if not self.uri:
             raise ValueError("Can not download file with no URI")
-        self.path = download_url(
-            self.uri, os.path.join(path, self.name), force_download
+        print(f"before download: {os.path.join(path, self.name)=}")
+        print(f"{self.name=}")
+        self.path, self.name = download_url(
+            self.uri, os.path.join(path, self.name), self.name, force_download
         )
+        print(f"after download: {self.name=}")
         # TODO: Store size & checksums if they become useful
 
     @classmethod
@@ -61,7 +64,6 @@ class InputInfo:
     def is_downloaded(self) -> bool:
         if not self.files:
             return False
-
         return all(f.is_downloaded() for f in self.files)
 
     def download_if_necessary(

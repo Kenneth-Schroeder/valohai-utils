@@ -2,6 +2,7 @@ import contextlib
 import os
 import tempfile
 from typing import Any, Dict, Union
+import pathlib
 
 from requests import Response
 from valohai.internals.utils import uri_to_filename, get_sha256_hash
@@ -70,14 +71,16 @@ def verify_datum(
 
 
 # TODO: This is close to valohai-local-run. Possibility to merge.
-def download_url(url: str, path: str, force_download: bool = False) -> str:
+def download_url(url: str, path: str, name: str, force_download: bool = False) -> str:
+    filename = ""
     if not os.path.isfile(path) or force_download:
         if url.startswith("datum://"):
-            input_folder_path = os.path.dirname(path)
+            input_folder_path = path.replace(f"/{name}", '') # os.path.dirname(path)
             datum_id_or_alias = uri_to_filename(url)
             datum_obj = resolve_datum(datum_id_or_alias)
             filename = datum_obj["name"]
             file_path = os.path.join(input_folder_path, filename)
+            pathlib.Path(file_path).parent.mkdir(exist_ok=True, parents=True)
 
             # it's safe to import valohai_cli, because resolve_datum bails out if it is not available
             from valohai_cli.api import request
@@ -88,13 +91,13 @@ def download_url(url: str, path: str, force_download: bool = False) -> str:
             download_response.raise_for_status()
             _do_download(download_response.json()["url"], file_path)
 
-            path = verify_datum(datum_obj, file_path=file_path)
+            path = file_path #verify_datum(datum_obj, file_path=file_path)
         else:
             _do_download(url, path)
     else:
         print(f"Using cached {path}")  # noqa
 
-    return path
+    return path, filename
 
 
 def _do_download(url: str, path: str) -> None:
