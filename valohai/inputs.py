@@ -2,16 +2,20 @@ from typing import IO, Iterable, Iterator, List, Optional, Union
 
 from valohai.internals import vfs
 from valohai.internals.download_type import DownloadType
-from valohai.internals.inputs import get_input_vfs
+from valohai.internals.inputs import get_input_vfs, DuplicateHandling
 from valohai.paths import get_inputs_path
 
 
 class Input:
     def __init__(
-        self, name: str, default: Optional[Union[str, List[str]]] = None
+        self,
+        name: str,
+        default: Optional[Union[str, List[str]]] = None,
+        duplicate_handling: DuplicateHandling = DuplicateHandling.OVERWRITE,
     ) -> None:
         self.name = str(name)
         self.default = default
+        self.duplicate_handling = duplicate_handling
 
     def paths(
         self,
@@ -33,13 +37,13 @@ class Input:
         :param force_download: Force re-download of file(s) even when they are cached already.
         :return: List of file system paths for all the files for this input.
         """
-
         fs = get_input_vfs(
             name=self.name,
             process_archives=process_archives,
             download_type=(
                 DownloadType.ALWAYS if force_download else DownloadType.OPTIONAL
             ),
+            duplicate_handling=self.duplicate_handling,  # Pass the duplicate handling mode
         )
         files = fs.filter(path_filter) if path_filter else fs.files
 
