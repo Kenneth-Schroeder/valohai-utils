@@ -83,7 +83,8 @@ class InputInfo:
                 # Resolve download URLs from Valohai before downloading
                 filenames_to_urls = request_download_urls(self.input_id)
                 print(f"{filenames_to_urls=}")
-                print(f"{self.files=}")
+                fileinfo= [file.name for file in self.files]
+                print(f"self.files={fileinfo}")
                 for file in self.files:
                     if not file.is_downloaded():
                         file.download_url = filenames_to_urls[file.name]
