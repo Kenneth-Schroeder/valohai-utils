@@ -46,11 +46,11 @@ def load_global_state(
 
     print(f"In load_global_state after sift_defaults: {inputs=}")
 
-    # Use inputs.json and parameters.json instead if found
-    inputs = load_inputs_from_config() or inputs
-    parameters = load_parameters_from_config() or parameters
+    # # Use inputs.json and parameters.json instead if found
+    # inputs = load_inputs_from_config() or inputs
+    # parameters = load_parameters_from_config() or parameters
 
-    print(f"In load_global_state after load from config: {inputs=}")
+    # print(f"In load_global_state after load from config: {inputs=}")
 
     # Parse and override input & parameter values from CLI
     cli_inputs, cli_parameters = parse_overrides_from_cli(
