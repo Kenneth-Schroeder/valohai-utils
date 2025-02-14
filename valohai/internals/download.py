@@ -99,9 +99,8 @@ def verify_datum(
 
 # TODO: This is close to valohai-local-run. Possibility to merge.
 def download_url(url: str, path: str, force_download: bool = False) -> str:
-    # Get a unique path that won't overwrite existing files
     final_path = get_enumerated_path(path)
-
+    
     if not os.path.isfile(final_path) or force_download:
         if url.startswith("datum://"):
             input_folder_path = os.path.dirname(final_path)

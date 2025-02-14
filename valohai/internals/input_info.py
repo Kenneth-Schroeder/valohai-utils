@@ -25,15 +25,15 @@ class FileInfo:
         self.name = str(name)
         self.uri = str(uri) if uri else None
         self.download_url = self.uri
+        self._downloaded = False
         self.checksums = dict(checksums) if checksums else {}
         self.path = str(path) if path else None
         self.size = int(size) if size else None
         self.metadata = list(metadata) if metadata else []
         self.datum_id = str(datum_id) if datum_id else None
 
-    def is_downloaded(self) -> Optional[bool]:
-        print(f"checking {self.path} in is_downloaded...")
-        return bool(self.path and os.path.isfile(self.path))
+    def is_downloaded(self) -> bool:
+        return self._downloaded
 
     def download(self, path: str, force_download: bool = False) -> None:
         if not self.download_url:
@@ -41,6 +41,7 @@ class FileInfo:
         self.path = download_url(
             self.download_url, os.path.join(path, self.name), force_download
         )
+        self._downloaded = True
         # TODO: Store size & checksums if they become useful
 
     @classmethod
