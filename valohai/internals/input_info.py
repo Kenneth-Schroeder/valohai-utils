@@ -32,6 +32,7 @@ class FileInfo:
         self.datum_id = str(datum_id) if datum_id else None
 
     def is_downloaded(self) -> Optional[bool]:
+        print(f"checking {self.path} in is_downloaded...")
         return bool(self.path and os.path.isfile(self.path))
 
     def download(self, path: str, force_download: bool = False) -> None:
