@@ -173,6 +173,7 @@ def request_download_urls(input_id: str) -> Dict[str, str]:
 
     Returns a dict of filename -> download URL for the given input.
     """
+    print(f"In request_download_urls, {input_id=}")
     try:
         import requests
     except ImportError as ie:
