@@ -61,6 +61,8 @@ class InputInfo:
     def __init__(self, files: Iterable[FileInfo], input_id: Optional[str] = None):
         self.files = list(files)
         self.input_id = input_id
+        fileinfo= [file.name for file in self.files]
+        print(f"In InputInfo's constructor: self.files={fileinfo}, {self.input_id=}")
 
     def is_downloaded(self) -> bool:
         if not self.files:
@@ -101,6 +103,8 @@ class InputInfo:
 
     @classmethod
     def from_urls_and_paths(cls, urls_and_paths: Union[str, List[str]]) -> "InputInfo":
+        print(f"in InputInfo's from_urls_and_paths: {urls_and_paths=}")
+        
         files = []
 
         for value in listify(urls_and_paths):
