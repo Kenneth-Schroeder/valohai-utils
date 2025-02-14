@@ -217,6 +217,7 @@ def convert_to_input_info(input: Union[str, List[str], Dict[str, Any]]) -> Input
 
     :param inputs: Single input as List[str] or Dict
     """
+    print(f"In convert_to_input_info: {input=}")
     if isinstance(input, (list, str)):
         return InputInfo.from_urls_and_paths(input)
     return InputInfo.from_json_data(input)
