@@ -44,9 +44,13 @@ def load_global_state(
     if default_parameters_from_prepare:
         parameters = sift_defaults(default_parameters_from_prepare)
 
+    print(f"In load_global_state after sift_defaults: {inputs=}")
+
     # Use inputs.json and parameters.json instead if found
     inputs = load_inputs_from_config() or inputs
     parameters = load_parameters_from_config() or parameters
+
+    print(f"In load_global_state after load from config: {inputs=}")
 
     # Parse and override input & parameter values from CLI
     cli_inputs, cli_parameters = parse_overrides_from_cli(
@@ -58,6 +62,7 @@ def load_global_state(
         key: cli_parameters.get(key, value) for key, value in parameters.items()
     }
 
+    print(f"In load_global_state after all loading: {inputs=}")
     # Inputs in various formats are converted into InputInfo(s)
     final_inputs = {key: convert_to_input_info(value) for key, value in inputs.items()}
 
