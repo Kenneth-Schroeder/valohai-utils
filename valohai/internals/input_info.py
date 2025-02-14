@@ -25,14 +25,15 @@ class FileInfo:
         self.name = str(name)
         self.uri = str(uri) if uri else None
         self.download_url = self.uri
+        self._downloaded = False
         self.checksums = dict(checksums) if checksums else {}
         self.path = str(path) if path else None
         self.size = int(size) if size else None
         self.metadata = list(metadata) if metadata else []
         self.datum_id = str(datum_id) if datum_id else None
 
-    def is_downloaded(self) -> Optional[bool]:
-        return bool(self.path and os.path.isfile(self.path))
+    def is_downloaded(self) -> bool:
+        return self._downloaded
 
     def download(self, path: str, force_download: bool = False) -> None:
         if not self.download_url:
@@ -40,6 +41,7 @@ class FileInfo:
         self.path = download_url(
             self.download_url, os.path.join(path, self.name), force_download
         )
+        self._downloaded = True
         # TODO: Store size & checksums if they become useful
 
     @classmethod
@@ -59,6 +61,8 @@ class InputInfo:
     def __init__(self, files: Iterable[FileInfo], input_id: Optional[str] = None):
         self.files = list(files)
         self.input_id = input_id
+        fileinfo= [file.name for file in self.files]
+        print(f"In InputInfo's constructor: self.files={fileinfo}, {self.input_id=}")
 
     def is_downloaded(self) -> bool:
         if not self.files:
@@ -69,6 +73,7 @@ class InputInfo:
     def download_if_necessary(
         self, name: str, download: DownloadType = DownloadType.OPTIONAL
     ) -> None:
+        print(f"In download_if_necessary: ({name=}, {self.is_downloaded()=}, {self.input_id})")
         if (
             download == DownloadType.ALWAYS
             or not self.is_downloaded()
@@ -79,14 +84,19 @@ class InputInfo:
             if self.input_id:
                 # Resolve download URLs from Valohai before downloading
                 filenames_to_urls = request_download_urls(self.input_id)
+                print(f"{filenames_to_urls=}")
+                fileinfo= [file.name for file in self.files]
+                print(f"self.files={fileinfo}")
                 for file in self.files:
                     if not file.is_downloaded():
                         file.download_url = filenames_to_urls[file.name]
             for f in self.files:
+                print(f"Downloading {f}")
                 f.download(path, force_download=(download == DownloadType.ALWAYS))
 
     @classmethod
     def from_json_data(cls, json_data: Dict[str, Any]) -> "InputInfo":
+        print(f"in InputInfo's from_json_data: {json_data=}")
         return cls(
             input_id=json_data.get("input_id"),
             files=[FileInfo.from_json_data(d) for d in json_data.get("files", ())],
@@ -94,6 +104,8 @@ class InputInfo:
 
     @classmethod
     def from_urls_and_paths(cls, urls_and_paths: Union[str, List[str]]) -> "InputInfo":
+        print(f"in InputInfo's from_urls_and_paths: {urls_and_paths=}")
+
         files = []
 
         for value in listify(urls_and_paths):

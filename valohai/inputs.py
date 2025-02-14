@@ -34,6 +34,8 @@ class Input:
         :return: List of file system paths for all the files for this input.
         """
 
+        print("Entering the paths function...")
+
         fs = get_input_vfs(
             name=self.name,
             process_archives=process_archives,
