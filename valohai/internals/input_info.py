@@ -1,6 +1,6 @@
 import glob
 import os
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union, Set
 
 from valohai_yaml.utils import listify
 
@@ -31,27 +31,34 @@ class FileInfo:
         self.metadata = list(metadata) if metadata else []
         self.datum_id = str(datum_id) if datum_id else None
 
-    def is_downloaded(self) -> Optional[bool]:
-        return bool(self.path and os.path.isfile(self.path))
+    def get_unique_filename(self, path: str, seen_files: Set[str]) -> str:
+        """Generate a unique filename by appending a counter if necessary."""
+        base_name, ext = os.path.splitext(self.name)
+        final_name = self.name
+        counter = 1
 
-    def download(self, path: str, force_download: bool = False) -> None:
+        while os.path.join(path, final_name) in seen_files:
+            final_name = f"{base_name}_{counter}{ext}"
+            counter += 1
+
+        seen_files.add(os.path.join(path, final_name))
+        return final_name
+
+    def download(
+        self,
+        path: str,
+        force_download: bool = False,
+        seen_files: Optional[Set[str]] = None,
+    ) -> None:
         if not self.download_url:
             raise ValueError("Can not download file with no URI")
-        self.path = download_url(
-            self.download_url, os.path.join(path, self.name), force_download
-        )
-        # TODO: Store size & checksums if they become useful
 
-    @classmethod
-    def from_json_data(cls, json_data: Dict[str, Any]) -> "FileInfo":
-        return cls(
-            name=json_data["name"],
-            uri=json_data.get("uri"),
-            path=json_data.get("path"),
-            size=json_data.get("size"),
-            checksums=json_data.get("checksums"),
-            metadata=json_data.get("metadata"),
-            datum_id=json_data.get("datum_id"),
+        if seen_files is None:
+            seen_files = set()
+
+        unique_name = self.get_unique_filename(path, seen_files)
+        self.path = download_url(
+            self.download_url, os.path.join(path, unique_name), force_download
         )
 
 
@@ -59,12 +66,7 @@ class InputInfo:
     def __init__(self, files: Iterable[FileInfo], input_id: Optional[str] = None):
         self.files = list(files)
         self.input_id = input_id
-
-    def is_downloaded(self) -> bool:
-        if not self.files:
-            return False
-
-        return all(f.is_downloaded() for f in self.files)
+        self._seen_files: Set[str] = set()  # Track seen filenames
 
     def download_if_necessary(
         self, name: str, download: DownloadType = DownloadType.OPTIONAL
@@ -83,7 +85,11 @@ class InputInfo:
                     if not file.is_downloaded():
                         file.download_url = filenames_to_urls[file.name]
             for f in self.files:
-                f.download(path, force_download=(download == DownloadType.ALWAYS))
+                f.download(
+                    path,
+                    force_download=(download == DownloadType.ALWAYS),
+                    seen_files=self._seen_files,
+                )
 
     @classmethod
     def from_json_data(cls, json_data: Dict[str, Any]) -> "InputInfo":
