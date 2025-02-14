@@ -129,6 +129,7 @@ def load_inputs_from_config() -> InputDict:
     """Load input values from the config file if it exists."""
     inputs = {}
     config_path = get_inputs_config_path()
+    print(f"In load_inputs_from_config: {config_path=}")
     if os.path.isfile(config_path):
         with open(config_path) as json_file:
             inputs = json.load(json_file)
