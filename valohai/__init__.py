@@ -1,9 +1,9 @@
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 import papi
 
 from valohai.controller_api import set_status_detail
-from valohai.inputs import inputs
+from valohai.inputs import inputs, DuplicateHandling
 from valohai.internals.global_state import distributed
 from valohai.metadata import logger
 from valohai.output_properties import output_properties
@@ -19,6 +19,7 @@ __all__ = [
     "distributed",
     "execution",
     "inputs",
+    "DuplicateHandling",
     "logger",
     "output_properties",
     "outputs",
