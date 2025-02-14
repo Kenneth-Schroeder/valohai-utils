@@ -96,6 +96,7 @@ class InputInfo:
 
     @classmethod
     def from_json_data(cls, json_data: Dict[str, Any]) -> "InputInfo":
+        print(f"in InputInfo's from_json_data: {json_data=}")
         return cls(
             input_id=json_data.get("input_id"),
             files=[FileInfo.from_json_data(d) for d in json_data.get("files", ())],
@@ -104,7 +105,7 @@ class InputInfo:
     @classmethod
     def from_urls_and_paths(cls, urls_and_paths: Union[str, List[str]]) -> "InputInfo":
         print(f"in InputInfo's from_urls_and_paths: {urls_and_paths=}")
-        
+
         files = []
 
         for value in listify(urls_and_paths):
