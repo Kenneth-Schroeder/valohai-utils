@@ -9,6 +9,32 @@ from valohai.internals.utils import uri_to_filename, get_sha256_hash
 from valohai.internals.api_calls import send_api_request
 
 
+def get_enumerated_path(base_path: str) -> str:
+    """
+    Given a base path like '/path/to/file.txt', returns an enumerated path
+    if the file already exists, like '/path/to/file-1.txt'
+
+    Args:
+        base_path: The original file path
+
+    Returns:
+        str: A unique path that doesn't exist on disk
+    """
+    if not os.path.exists(base_path):
+        return base_path
+
+    directory = os.path.dirname(base_path)
+    filename = os.path.basename(base_path)
+    name, ext = os.path.splitext(filename)
+
+    counter = 1
+    while True:
+        enumerated_path = os.path.join(directory, f"{name}-{counter}{ext}")
+        if not os.path.exists(enumerated_path):
+            return enumerated_path
+        counter += 1
+
+
 def resolve_datum(datum_id: str) -> Dict[str, Any]:
     datum_id_or_alias = datum_id
     try:
@@ -73,13 +99,23 @@ def verify_datum(
 
 # TODO: This is close to valohai-local-run. Possibility to merge.
 def download_url(url: str, path: str, force_download: bool = False) -> str:
-    if not os.path.isfile(path) or force_download:
+    # Get a unique path that won't overwrite existing files
+    final_path = get_enumerated_path(path)
+
+    if not os.path.isfile(final_path) or force_download:
         if url.startswith("datum://"):
-            input_folder_path = os.path.dirname(path)
+            input_folder_path = os.path.dirname(final_path)
             datum_id_or_alias = uri_to_filename(url)
             datum_obj = resolve_datum(datum_id_or_alias)
             filename = datum_obj["name"]
-            file_path = os.path.join(input_folder_path, filename)
+            file_path = get_enumerated_path(os.path.join(input_folder_path, filename))
+
+            print("------")
+            print(url)
+            print(input_folder_path)
+            print(datum_id_or_alias)
+            print(filename)
+            print(file_path)
 
             # it's safe to import valohai_cli, because resolve_datum bails out if it is not available
             from valohai_cli.api import request
@@ -90,13 +126,13 @@ def download_url(url: str, path: str, force_download: bool = False) -> str:
             download_response.raise_for_status()
             _do_download(download_response.json()["url"], file_path)
 
-            path = verify_datum(datum_obj, file_path=file_path)
+            final_path = verify_datum(datum_obj, file_path=file_path)
         else:
-            _do_download(url, path)
+            _do_download(url, final_path)
     else:
-        print(f"Using cached {path}")  # noqa
+        print(f"Using cached {final_path}")  # noqa
 
-    return path
+    return final_path
 
 
 def _do_download(url: str, path: str) -> None:
