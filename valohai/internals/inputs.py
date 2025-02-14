@@ -13,6 +13,9 @@ def get_input_vfs(
 ) -> vfs.VFS:
     v = vfs.VFS()
     ii = get_input_info(name)
+    print(f"In get_input_vfs...")
+    print(f"{name=}")
+    print(f"{ii=}")
     if ii:
         ii.download_if_necessary(name, download_type)
         for file_info in ii.files:

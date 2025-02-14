@@ -69,6 +69,7 @@ class InputInfo:
     def download_if_necessary(
         self, name: str, download: DownloadType = DownloadType.OPTIONAL
     ) -> None:
+        print(f"In download_if_necessary... ({name})")
         if (
             download == DownloadType.ALWAYS
             or not self.is_downloaded()
@@ -79,10 +80,12 @@ class InputInfo:
             if self.input_id:
                 # Resolve download URLs from Valohai before downloading
                 filenames_to_urls = request_download_urls(self.input_id)
+                print(f"{filenames_to_urls=}")
                 for file in self.files:
                     if not file.is_downloaded():
                         file.download_url = filenames_to_urls[file.name]
             for f in self.files:
+                print(f"Downloading {f}")
                 f.download(path, force_download=(download == DownloadType.ALWAYS))
 
     @classmethod
