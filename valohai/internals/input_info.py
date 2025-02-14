@@ -44,6 +44,9 @@ class FileInfo:
         seen_files.add(os.path.join(path, final_name))
         return final_name
 
+    def is_downloaded(self) -> Optional[bool]:
+        return bool(self.path and os.path.isfile(self.path))
+
     def download(
         self,
         path: str,
