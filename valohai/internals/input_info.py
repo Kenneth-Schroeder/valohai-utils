@@ -83,6 +83,11 @@ class InputInfo:
         self.input_id = input_id
         self._seen_files: Set[str] = set()  # Track seen filenames
 
+    def is_downloaded(self) -> bool:
+        if not self.files:
+            return False
+        return all(f.is_downloaded() for f in self.files)
+
     def download_if_necessary(
         self, name: str, download: DownloadType = DownloadType.OPTIONAL
     ) -> None:
