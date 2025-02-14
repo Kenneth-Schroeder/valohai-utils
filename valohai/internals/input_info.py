@@ -61,6 +61,18 @@ class FileInfo:
             self.download_url, os.path.join(path, unique_name), force_download
         )
 
+    @classmethod
+    def from_json_data(cls, json_data: Dict[str, Any]) -> "FileInfo":
+        return cls(
+            name=json_data["name"],
+            uri=json_data.get("uri"),
+            path=json_data.get("path"),
+            size=json_data.get("size"),
+            checksums=json_data.get("checksums"),
+            metadata=json_data.get("metadata"),
+            datum_id=json_data.get("datum_id"),
+        )
+
 
 class InputInfo:
     def __init__(self, files: Iterable[FileInfo], input_id: Optional[str] = None):
