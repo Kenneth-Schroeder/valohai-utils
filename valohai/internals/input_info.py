@@ -73,7 +73,7 @@ class InputInfo:
     def download_if_necessary(
         self, name: str, download: DownloadType = DownloadType.OPTIONAL
     ) -> None:
-        print(f"In download_if_necessary... ({name=}, {self.is_downloaded()=})")
+        print(f"In download_if_necessary: ({name=}, {self.is_downloaded()=}, {self.input_id})")
         if (
             download == DownloadType.ALWAYS
             or not self.is_downloaded()
