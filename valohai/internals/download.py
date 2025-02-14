@@ -127,6 +127,7 @@ def download_url(url: str, path: str, force_download: bool = False) -> str:
 
             final_path = verify_datum(datum_obj, file_path=file_path)
         else:
+            print(f"In download_url: {url=}")
             _do_download(url, final_path)
     else:
         print(f"Using cached {final_path}")  # noqa
