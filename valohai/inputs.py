@@ -2,8 +2,9 @@ from typing import IO, Iterable, Iterator, List, Optional, Union
 
 from valohai.internals import vfs
 from valohai.internals.download_type import DownloadType
-from valohai.internals.inputs import get_input_vfs, DuplicateHandling
+from valohai.internals.inputs import get_input_vfs
 from valohai.paths import get_inputs_path
+from valohai.internals.input_info import DuplicateHandling
 
 
 class Input:
@@ -24,26 +25,13 @@ class Input:
         process_archives: bool = True,
         force_download: bool = False,
     ) -> Iterator[str]:
-        """Get paths to all files for a given input name.
-
-        Returns a list of file system paths for an input.
-        If the input is not found in the cache, it is downloaded automatically.
-
-        See streams() or path() for alternatives.
-
-        :param path_filter: Filter the results with wildcards. For example: "myfile.txt" or "myfolder/*.txt".
-        :param default: Default fallback paths.
-        :param process_archives: When facing an archive file, is it unpacked to several paths or returned as is
-        :param force_download: Force re-download of file(s) even when they are cached already.
-        :return: List of file system paths for all the files for this input.
-        """
         fs = get_input_vfs(
             name=self.name,
             process_archives=process_archives,
             download_type=(
                 DownloadType.ALWAYS if force_download else DownloadType.OPTIONAL
             ),
-            duplicate_handling=self.duplicate_handling,  # Pass the duplicate handling mode
+            duplicate_handling=self.duplicate_handling,
         )
         files = fs.filter(path_filter) if path_filter else fs.files
 

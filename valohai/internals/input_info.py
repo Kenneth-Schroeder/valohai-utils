@@ -1,3 +1,4 @@
+from enum import Enum
 import glob
 import os
 from typing import Any, Dict, Iterable, List, Optional, Union
@@ -8,6 +9,12 @@ from valohai.internals.download import download_url, request_download_urls
 from valohai.internals.download_type import DownloadType
 from valohai.internals.utils import uri_to_filename
 from valohai.paths import get_inputs_path
+
+
+class DuplicateHandling(Enum):
+    OVERWRITE = "overwrite"  # Default behavior - last file wins
+    APPEND_INDEX = "append_index"  # Append _1, _2, etc to duplicates
+    APPEND_HASH = "append_hash"  # Append part of file hash to duplicates
 
 
 class FileInfo:
@@ -63,7 +70,6 @@ class InputInfo:
     def is_downloaded(self) -> bool:
         if not self.files:
             return False
-
         return all(f.is_downloaded() for f in self.files)
 
     def download_if_necessary(
@@ -77,7 +83,6 @@ class InputInfo:
             path = get_inputs_path(name)
             os.makedirs(path, exist_ok=True)
             if self.input_id:
-                # Resolve download URLs from Valohai before downloading
                 filenames_to_urls = request_download_urls(self.input_id)
                 for file in self.files:
                     if not file.is_downloaded():
@@ -93,18 +98,39 @@ class InputInfo:
         )
 
     @classmethod
-    def from_urls_and_paths(cls, urls_and_paths: Union[str, List[str]]) -> "InputInfo":
+    def from_urls_and_paths(
+        cls,
+        urls_and_paths: Union[str, List[str]],
+        duplicate_handling: DuplicateHandling = DuplicateHandling.OVERWRITE,
+    ) -> "InputInfo":
         files = []
+        seen_names = {}
+
+        def modify_filename(base_name: str, index: int = 0) -> str:
+            name, ext = os.path.splitext(base_name)
+            if index > 0:
+                return f"{name}_{index}{ext}"
+            return base_name
 
         for value in listify(urls_and_paths):
-            # TODO: this cast shouldn't be required,
-            #       but listify()'s types are wonky with new mypy
             value = str(value)
             if "://" not in value:  # The string is a local path
                 for path in glob.glob(value):
+                    base_name = os.path.basename(path)
+                    final_name = base_name
+
+                    if duplicate_handling == DuplicateHandling.APPEND_INDEX:
+                        if base_name in seen_names:
+                            seen_names[base_name] += 1
+                            final_name = modify_filename(
+                                base_name, seen_names[base_name]
+                            )
+                        else:
+                            seen_names[base_name] = 0
+
                     files.append(
                         FileInfo(
-                            name=os.path.basename(path),
+                            name=final_name,
                             uri=None,
                             path=path,
                             size=None,
@@ -112,9 +138,19 @@ class InputInfo:
                         )
                     )
             else:  # The string is an URL
+                base_name = uri_to_filename(value)
+                final_name = base_name
+
+                if duplicate_handling == DuplicateHandling.APPEND_INDEX:
+                    if base_name in seen_names:
+                        seen_names[base_name] += 1
+                        final_name = modify_filename(base_name, seen_names[base_name])
+                    else:
+                        seen_names[base_name] = 0
+
                 files.append(
                     FileInfo(
-                        name=uri_to_filename(value),
+                        name=final_name,
                         uri=value,
                         path=None,
                         size=None,
